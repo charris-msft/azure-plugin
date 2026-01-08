@@ -1,0 +1,13 @@
+{
+  "name": "azure-mcp",
+  "version": "0.5.0",
+  "description": "Azure development assistant with MCP server integration and best practices skills for Storage, Compute, Data, Security, AI, and Infrastructure services",
+  "author": {
+    "name": "Chris Harris",
+    "email": "charris@microsoft.com"
+  },
+  "homepage": "https://github.com/charris-msft/azure-plugin",
+  "repository": "https://github.com/charris-msft/azure-plugin",
+  "license": "MIT",
+  "keywords": ["azure", "cloud", "mcp", "devops", "infrastructure", "container-apps", "aks", "functions", "app-service"]
+}

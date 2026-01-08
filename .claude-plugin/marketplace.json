@@ -1,0 +1,28 @@
+{
+  "name": "charris-marketplace",
+  "owner": {
+    "name": "Chris Harris",
+    "email": "charris@microsoft.com"
+  },
+  "metadata": {
+    "description": "CHarris Marketplace - Claude Code plugins for Azure development",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "azure-mcp",
+      "source": "./",
+      "description": "Azure development assistant with MCP server integration and best practices skills",
+      "version": "0.5.0",
+      "author": {
+        "name": "Chris Harris",
+        "email": "charris@microsoft.com"
+      },
+      "homepage": "https://github.com/charris-msft/azure-plugin",
+      "repository": "https://github.com/charris-msft/azure-plugin",
+      "license": "MIT",
+      "keywords": ["azure", "cloud", "mcp", "devops", "infrastructure"],
+      "category": "cloud"
+    }
+  ]
+}

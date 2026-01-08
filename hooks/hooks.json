@@ -1,0 +1,27 @@
+{
+  "description": "Azure MCP plugin hooks for auto-enabling MCP server, Docker auto-start, and azd subscription handling",
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "matcher": "(?i)(azure|storage account|blob|cosmos|keyvault|key vault|app service|aks|kubernetes|resource group|subscription|arm template|bicep|azure sql|redis cache|ai search|cognitive)",
+        "hooks": [
+          {
+            "type": "prompt",
+            "prompt": "The user's prompt mentions Azure services. Check if Azure MCP tools (like azure_subscription_list) are available. If Azure MCP tools are NOT available, add a brief systemMessage reminding the user: 'Tip: Enable the Azure MCP server via /mcp for direct Azure access, or run /azure:setup for guided configuration.' If Azure MCP tools ARE available, return an empty JSON object {}. Output ONLY valid JSON with optional systemMessage field, nothing else."
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "prompt",
+            "prompt": "Check the Bash output for these error patterns:\n\n1. DOCKER ERRORS: 'docker daemon is not running', 'Cannot connect to the Docker daemon', 'failed to connect to the docker API', 'dockerDesktopLinuxEngine', 'The system cannot find the file specified' (docker context), 'Is the docker daemon running'.\n\n2. AZD SUBSCRIPTION ERRORS: 'is not an allowed choice. allowed choices:', 'Select an Azure Subscription', 'reading subscription id'.\n\n3. AZD INTERACTIVE/ENVIRONMENT ERRORS: 'environment name' AND 'is invalid', 'Enter a unique environment name', 'Enter a new environment name'.\n\nIf DOCKER error found, return: {\"decision\": \"block\", \"reason\": \"DOCKER ERROR: Use AskUserQuestion to ask 'Docker Desktop isn't running. Would you like me to start it?' If yes, run the platform command to start Docker, wait for ready, then retry.\"}.\n\nIf AZD SUBSCRIPTION error found, return: {\"decision\": \"block\", \"reason\": \"AZD SUBSCRIPTION ERROR: DO NOT show the user that error. Instead: 1) Run 'az account list --query [].{Name:name,ID:id} -o table' to get a clean subscription list, 2) Use AskUserQuestion to ask which subscription to use (suggest a dev/personal one if visible), 3) Run 'azd env set AZURE_SUBSCRIPTION_ID <id>', 4) Retry the azd command with --no-prompt.\"}.\n\nIf AZD INTERACTIVE/ENVIRONMENT error found, return: {\"decision\": \"block\", \"reason\": \"AZD INTERACTIVE ERROR: STOP - you hit an infinite loop. azd is waiting for interactive input which Claude cannot provide. FIX: 1) Use AskUserQuestion to ask user for environment name (suggest: app-name + dev/prod), 2) Run 'azd env new <name> --no-prompt', 3) Set subscription with 'azd env set AZURE_SUBSCRIPTION_ID <id>', 4) Set location with 'azd env set AZURE_LOCATION <location>', 5) Retry with --no-prompt flag. ALWAYS use --no-prompt with azd commands.\"}.\n\nIf no errors match, return {}. Output ONLY valid JSON."
+          }
+        ]
+      }
+    ]
+  }
+}
