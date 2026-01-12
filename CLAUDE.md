@@ -140,6 +140,13 @@ azure-mcp/
 
 ## Changelog
 
+### 0.6.0
+- **NEW: Azure CLI Tools skill** for detecting and installing missing CLI tools
+- Skill triggers on "az not found", "azd not found", "func not found" errors
+- Guides Claude to use `azure__extension_cli_install` MCP tool for installation
+- Covers Azure CLI (az), Azure Developer CLI (azd), and Functions Core Tools (func)
+- Platform-specific installation commands as fallback
+
 ### 0.5.0
 - **CRITICAL FIX: azd non-interactive mode enforcement**
 - Added guidance to ALWAYS use `--no-prompt` with azd commands

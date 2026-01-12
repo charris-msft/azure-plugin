@@ -1,6 +1,6 @@
 {
   "name": "azure-mcp",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Azure development assistant with MCP server integration and best practices skills for Storage, Compute, Data, Security, AI, and Infrastructure services",
   "author": {
     "name": "Chris Harris",

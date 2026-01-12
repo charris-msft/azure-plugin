@@ -51,6 +51,7 @@ Run `/azure:setup` to configure authentication and verify everything is working.
 
 | Skill | Description |
 |-------|-------------|
+| `azure-cli-tools` | Install Azure CLI (az), azd, and Functions Core Tools |
 | `azure-storage` | Blob storage, containers, queues, file shares |
 | `azure-compute` | App Service, Functions, AKS, Container Apps |
 | `azure-data` | SQL Database, Cosmos DB, Redis Cache |
