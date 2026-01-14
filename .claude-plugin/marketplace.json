@@ -12,8 +12,8 @@
     {
       "name": "azure-mcp",
       "source": "./",
-      "description": "Azure development assistant with MCP server integration and best practices skills",
-      "version": "0.6.0",
+      "description": "Azure cloud assistant with progressive skill architecture for all Azure services",
+      "version": "1.0.0",
       "author": {
         "name": "Chris Harris",
         "email": "charris@microsoft.com"

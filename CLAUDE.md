@@ -140,6 +140,17 @@ azure-mcp/
 
 ## Changelog
 
+### 1.0.0
+- **MAJOR: Progressive Skill Architecture**
+- Consolidated 7 individual skills into single `azure-cloud` skill
+- Only root SKILL.md has YAML frontmatter (~300 tokens in context)
+- Domain content loads lazily on demand (data, compute, storage, security, ai, networking, observability)
+- Dual entry points: by domain (service taxonomy) or by scenario (task-based)
+- Added scenarios: deployment, diagnostics, cli-tools, cost-optimization, security-hardening
+- Added mcp/ directory with setup and tool-reference docs
+- Added cli/ directory with cheatsheet and tips
+- Service-specific files under each domain (e.g., cosmos-db.md, container-apps.md)
+
 ### 0.6.0
 - **NEW: Azure CLI Tools skill** for detecting and installing missing CLI tools
 - Skill triggers on "az not found", "azd not found", "func not found" errors

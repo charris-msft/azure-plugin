@@ -1,16 +1,43 @@
 # Azure MCP Plugin
 
-Azure development assistant plugin for Claude Code with integrated MCP server and comprehensive best practices skills.
+Azure cloud development and operations assistant for Claude Code with progressive skill architecture and integrated MCP server.
 
 **Part of the CHarris Marketplace**
 
 ## Features
 
+- **Progressive Skill Architecture**: Single `azure-cloud` skill lazily loads domain-specific content on demand
 - **Azure MCP Server Integration**: Direct access to 40+ Azure services via MCP tools
-- **Best Practices Skills**: Comprehensive guidance for major Azure service categories
+- **Dual Entry Points**: Navigate by domain (data, compute, storage) or by scenario (deployment, diagnostics)
 - **Setup Commands**: Easy configuration and authentication helpers
-- **Auto-Enable Prompts**: Intelligent reminders when Azure MCP tools are needed
-- **Smart Error Handling**: Automatic Docker start, azd subscription selection, non-interactive mode enforcement
+- **Smart Error Handling**: Automatic Docker start, azd subscription selection, CLI tool installation
+
+## Architecture
+
+```
+skills/azure-cloud/
+├── SKILL.md                    # Root skill (only file with frontmatter)
+├── domains/                    # Service-oriented content
+│   ├── data/README.md          # Cosmos DB, SQL, Redis
+│   ├── compute/README.md       # Container Apps, Functions, AKS
+│   ├── storage/README.md       # Blob, Files, Queues
+│   ├── security/README.md      # Key Vault, RBAC, Identity
+│   ├── ai/README.md            # AI Search, Speech, Foundry
+│   ├── networking/README.md    # VNets, Private Endpoints
+│   └── observability/README.md # Monitor, App Insights
+├── scenarios/                  # Task-oriented content
+│   ├── deployment.md           # Deploy applications
+│   ├── diagnostics.md          # Debug issues
+│   ├── cli-tools.md            # Install az, azd, func
+│   ├── cost-optimization.md    # Reduce costs
+│   └── security-hardening.md   # Secure resources
+├── mcp/                        # MCP server docs
+│   ├── setup.md
+│   └── tool-reference.md
+└── cli/                        # CLI docs
+    ├── cheatsheet.md
+    └── tips.md
+```
 
 ## Prerequisites
 
@@ -47,27 +74,31 @@ Azure development assistant plugin for Claude Code with integrated MCP server an
 
 Run `/azure:setup` to configure authentication and verify everything is working.
 
-## Skills Included
-
-| Skill | Description |
-|-------|-------------|
-| `azure-cli-tools` | Install Azure CLI (az), azd, and Functions Core Tools |
-| `azure-storage` | Blob storage, containers, queues, file shares |
-| `azure-compute` | App Service, Functions, AKS, Container Apps |
-| `azure-data` | SQL Database, Cosmos DB, Redis Cache |
-| `azure-security` | Key Vault, RBAC, managed identities |
-| `azure-ai` | AI Search, Cognitive Services, Foundry |
-| `azure-infrastructure` | CLI, Resource Groups, ARM/Bicep deployments |
-
 ## Commands
 
 - `/azure:setup` - Configure Azure MCP server and authenticate
 - `/azure:auth` - Help with Azure authentication issues
 - `/azure:status` - Check MCP server status and available tools
 
+## Usage
+
+The progressive skill architecture means Claude loads only what's needed:
+
+1. **Ask about Azure** - Triggers the `azure-cloud` skill
+2. **Skill identifies domain** - Points to relevant domain or scenario file
+3. **Claude reads file** - Loads specific guidance on demand
+4. **Deep dive if needed** - Service files provide detailed patterns
+
+### Example Interactions
+
+- "Deploy my app to Azure" → Reads `scenarios/deployment.md`
+- "Query Cosmos DB" → Reads `domains/data/README.md` → `services/cosmos-db.md`
+- "azd not found" → Reads `scenarios/cli-tools.md`
+- "Secure my Key Vault" → Reads `domains/security/README.md`
+
 ## Authentication
 
-The Azure MCP server uses Azure CLI credentials by default. Run:
+The Azure MCP server uses Azure CLI credentials by default:
 
 ```bash
 az login
@@ -77,17 +108,6 @@ For service principal authentication, set environment variables:
 - `AZURE_TENANT_ID`
 - `AZURE_CLIENT_ID`
 - `AZURE_CLIENT_SECRET`
-
-## Usage
-
-Once enabled, simply ask Claude about Azure services:
-
-- "List my storage accounts"
-- "What containers are in my storage account?"
-- "Show me my AKS clusters"
-- "Create a new resource group"
-
-The plugin will automatically activate relevant skills and suggest enabling the MCP server when needed.
 
 ## License
 

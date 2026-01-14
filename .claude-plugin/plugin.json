@@ -1,7 +1,7 @@
 {
   "name": "azure-mcp",
-  "version": "0.6.0",
-  "description": "Azure development assistant with MCP server integration and best practices skills for Storage, Compute, Data, Security, AI, and Infrastructure services",
+  "version": "1.0.0",
+  "description": "Azure cloud development and operations assistant with progressive skill architecture. Single azure-cloud skill provides lazy-loaded guidance for all Azure services including compute, storage, data, security, AI, networking, and observability.",
   "author": {
     "name": "Chris Harris",
     "email": "charris@microsoft.com"
