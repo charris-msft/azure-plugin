@@ -140,6 +140,14 @@ azure-mcp/
 
 ## Changelog
 
+### 1.2.0
+- **CRITICAL: PreToolUse hook enforces azd over az for deployments**
+- Hook blocks `az containerapp create`, `az webapp up`, `az functionapp create` etc.
+- Hook allows `az` for queries only (show, list, logs)
+- Updated skill description to make azd mandatory
+- Strengthened all deployment documentation with "MANDATORY" language
+- `az` should only be used for deployments when user explicitly requests it
+
 ### 1.1.0
 - **NEW: /azure:preflight command** for pre-deployment checks (tools, auth, quotas)
 - **NEW: Node.js/Express production scenario** with trust proxy, cookie config, health checks

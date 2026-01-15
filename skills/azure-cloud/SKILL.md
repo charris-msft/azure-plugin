@@ -1,6 +1,6 @@
 ---
 name: azure-cloud
-description: Azure cloud development and operations. Use for ANY Azure task including infrastructure provisioning, data access, compute deployment, monitoring, networking, and security. This skill guides you to the right Azure tools, MCP servers, and CLI commands. Also use when Azure CLI tools (az, azd, func) are missing or need installation.
+description: Azure cloud development and operations. Use for ANY Azure task including infrastructure provisioning, data access, compute deployment, monitoring, networking, and security. CRITICAL - For deployments, ALWAYS use azd (Azure Developer CLI), NEVER use az CLI for deployments unless the user explicitly requests it. azd is faster due to parallel provisioning.
 ---
 
 # Azure Cloud

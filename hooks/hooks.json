@@ -1,6 +1,17 @@
 {
-  "description": "Azure MCP plugin hooks for auto-enabling MCP server, Docker auto-start, azd handling, ACR fallback, and CLI tool installation",
+  "description": "Azure MCP plugin hooks for auto-enabling MCP server, Docker auto-start, azd handling, ACR fallback, CLI tool installation, and azd enforcement",
   "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "prompt",
+            "prompt": "CRITICAL: Check if the Bash command is an 'az' deployment command that should use 'azd' instead.\n\nBLOCK these az deployment commands:\n- 'az containerapp create' or 'az containerapp up'\n- 'az webapp create' or 'az webapp up' or 'az webapp deploy'\n- 'az functionapp create' or 'az functionapp deployment'\n- 'az group create' followed by resource creation (infrastructure provisioning)\n- 'az acr build' (when used as part of deployment workflow)\n\nALLOW these az commands (queries/management only):\n- 'az containerapp show', 'az containerapp list', 'az containerapp logs'\n- 'az webapp show', 'az webapp list'\n- 'az acr login', 'az acr list', 'az acr show'\n- 'az account', 'az group list', 'az group show'\n- 'az containerapp registry set' (fixing ACR credentials)\n- 'az containerapp update' (post-deployment tweaks)\n- Any 'az' command the USER explicitly requested\n\nIf the command is a BLOCKED az deployment command, return:\n{\"decision\": \"block\", \"reason\": \"STOP: Use azd instead of az for deployments. azd is faster (parallel provisioning) and handles ACR integration automatically. Commands: 'azd init' to initialize, 'azd up' to deploy, 'azd deploy' for code-only updates. Only use az for queries and post-deployment management.\"}\n\nIf the command is ALLOWED or is an azd command, return {}.\n\nOutput ONLY valid JSON."
+          }
+        ]
+      }
+    ],
     "UserPromptSubmit": [
       {
         "matcher": "(?i)(azure|storage account|blob|cosmos|keyvault|key vault|app service|aks|kubernetes|resource group|subscription|arm template|bicep|azure sql|redis cache|ai search|cognitive|container app|deploy)",

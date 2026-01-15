@@ -1,15 +1,18 @@
 # Azure Container Apps
 
+> **MANDATORY: Deploy with `azd up` - DO NOT use `az containerapp create/up`**
+> The `az` CLI is for queries only (show, list, logs). Use `azd` for all deployments.
+
 ## Quick Reference
 
 | Property | Value |
 |----------|-------|
-| Deploy with | `azd up` (ALWAYS prefer azd) |
-| CLI prefix | `az containerapp` |
+| Deploy with | **`azd up` (MANDATORY)** |
+| Query with | `az containerapp show/list/logs` |
 | MCP tools | `azure_container_app_list` |
 | Best for | Microservices, serverless containers, HTTP APIs |
 
-## ALWAYS Deploy with azd
+## Deploy with azd (MANDATORY)
 
 ```bash
 # Initialize

@@ -1,22 +1,24 @@
 # Azure Compute Services
 
-## ALWAYS Use azd for Deployments
+## MANDATORY: Use azd for All Deployments
 
-**azd (Azure Developer CLI) is faster than az** because it provisions resources in parallel.
+> **DO NOT use `az` CLI commands like `az containerapp create`, `az webapp up`, etc.**
+> **ALWAYS use `azd up` for deployments.**
+> Only use `az` for deployments if the user explicitly requests it.
 
 ```bash
-# Deploy everything
+# Deploy everything - THIS IS THE ONLY WAY
 azd up
 
 # Clean up test environments
 azd down --force --purge
 ```
 
-**Why azd:**
-- Parallel provisioning (faster)
-- Automatic ACR + Container Apps integration
-- Single command cleanup
-- Built-in CI/CD generation
+**Why azd is mandatory:**
+- **Parallel provisioning** - deploys in seconds, not minutes
+- **Automatic ACR integration** - no image pull failures
+- **Single command** - `azd up` replaces 5+ `az` commands
+- **Use az for queries only** - `az containerapp show`, `az webapp list`, etc.
 
 ## Services
 

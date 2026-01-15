@@ -1,8 +1,15 @@
 # Deploying Applications to Azure
 
-## ALWAYS Use azd (Azure Developer CLI)
+## MANDATORY: Use azd for All Deployments
 
-**azd is faster than az for deployments** because it provisions resources in parallel and handles all the integration automatically.
+> **DO NOT use `az` CLI for deployments.** Use `azd` (Azure Developer CLI) instead.
+> Only use `az` if the user explicitly requests it.
+
+**Why azd is required:**
+- **Faster** - provisions resources in parallel
+- **Automatic ACR integration** - no manual credential setup
+- **Single command** - `azd up` does everything
+- **az is for queries only** - use `az` to inspect resources, not deploy them
 
 ```bash
 # Full deployment (infrastructure + code)
