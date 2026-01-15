@@ -4,59 +4,105 @@
 
 | Property | Value |
 |----------|-------|
+| Deploy with | `azd up` (ALWAYS prefer azd) |
 | CLI prefix | `az containerapp` |
 | MCP tools | `azure_container_app_list` |
 | Best for | Microservices, serverless containers, HTTP APIs |
 
-## When to Use Container Apps
-
-- Microservices without Kubernetes complexity
-- HTTP APIs and web apps
-- Event-driven processing with KEDA
-- Background jobs and workers
-
-## Deploying with azd (Recommended)
+## ALWAYS Deploy with azd
 
 ```bash
-# Initialize from template
+# Initialize
 azd init --template azure-samples/todo-nodejs-mongo-aca
 
-# Deploy everything
+# Deploy (handles ACR, Container Apps, networking automatically)
 azd up
 
-# View deployed app
-azd show
+# Update code only
+azd deploy
+
+# Clean up test environment
+azd down --force --purge
 ```
 
-**Popular azd templates:**
-- `azure-samples/todo-nodejs-mongo-aca` - Node.js + MongoDB
-- `azure-samples/todo-python-mongo-aca` - Python + MongoDB
-- `azure-samples/todo-csharp-sql-aca` - .NET + SQL
+**azd advantages:**
+- Parallel resource provisioning (faster than az)
+- Automatic ACR credential configuration
+- Integrated environment management
+- One-command teardown
 
-## CLI Deployment
+## Popular azd Templates
+
+| Template | Stack |
+|----------|-------|
+| `todo-nodejs-mongo-aca` | Node.js + MongoDB + Container Apps |
+| `todo-python-mongo-aca` | Python + MongoDB + Container Apps |
+| `todo-csharp-sql-aca` | .NET + SQL + Container Apps |
+
+## ACR Integration (CRITICAL)
+
+**azd handles this automatically.** If you must deploy manually, configure ACR credentials:
 
 ```bash
-# Build and push to ACR
-az acr build --registry REGISTRY --image myapp:v1 .
+# The problem: Container Apps can't pull from ACR without credentials
+# The fix:
+az containerapp registry set \
+  --name APP \
+  --resource-group RG \
+  --server ACR.azurecr.io \
+  --identity system
+```
 
-# Deploy container app
+**Symptom of missing ACR config:** Container stuck in "Waiting" or "ImagePullBackOff"
+
+## Manual Deployment (Only If azd Not Possible)
+
+### Option 1: ACR Build (Cloud Build)
+
+```bash
+# Build in the cloud (requires ACR Tasks - may be disabled on free subscriptions)
+az acr build --registry ACR --image myapp:v1 .
+```
+
+### Option 2: Local Docker Build (Fallback)
+
+**If ACR Tasks is disabled** (common on free/trial subscriptions), build locally:
+
+```bash
+# Build locally with Docker
+docker build -t ACR.azurecr.io/myapp:v1 .
+
+# Login to ACR
+az acr login --name ACR
+
+# Push to ACR
+docker push ACR.azurecr.io/myapp:v1
+```
+
+**Error pattern to detect:** `ACR Tasks is not supported` or `TasksOperationsNotAllowed`
+
+### Deploy to Container Apps
+
+```bash
+# Create Container App
 az containerapp up \
   --name myapp \
   --resource-group RG \
-  --image REGISTRY.azurecr.io/myapp:v1 \
+  --image ACR.azurecr.io/myapp:v1 \
   --ingress external \
   --target-port 8080
 
-# Update with new image
-az containerapp update \
+# IMPORTANT: Configure ACR credentials
+az containerapp registry set \
   --name myapp \
   --resource-group RG \
-  --image REGISTRY.azurecr.io/myapp:v2
+  --server ACR.azurecr.io \
+  --identity system
 ```
 
 ## Scaling Configuration
 
-### HTTP Scaling
+### HTTP-Based Scaling
 
 ```bash
 az containerapp update \
@@ -69,9 +115,12 @@ az containerapp update \
   --scale-rule-http-concurrency 50
 ```
 
-### KEDA Scaling
+### Prevent Cold Starts
 
-Supports Azure Queue, Service Bus, Cosmos DB change feed, and more.
+```bash
+# Set minimum replicas to avoid cold start
+az containerapp update --name myapp -g RG --min-replicas 1
+```
 
 ## Environment Variables and Secrets
 
@@ -79,7 +128,7 @@ Supports Azure Queue, Service Bus, Cosmos DB change feed, and more.
 # Set environment variable
 az containerapp update \
   --name myapp -g RG \
-  --set-env-vars KEY=VALUE
+  --set-env-vars KEY=VALUE NODE_ENV=production
 
 # Create secret
 az containerapp secret set \
@@ -90,6 +139,88 @@ az containerapp secret set \
 az containerapp update \
   --name myapp -g RG \
   --set-env-vars DB_PASSWORD=secretref:dbpassword
+```
+
+## Troubleshooting
+
+### ACR Tasks Disabled (Free Subscriptions)
+
+**Symptom:** `az acr build` fails with "ACR Tasks is not supported" or "TasksOperationsNotAllowed"
+
+**Cause:** Free/trial subscriptions often have ACR Tasks disabled
+
+**Fix: Use local Docker build instead:**
+```bash
+# Build locally
+docker build -t ACR.azurecr.io/myapp:v1 .
+
+# Login to ACR
+az acr login --name ACR
+
+# Push
+docker push ACR.azurecr.io/myapp:v1
+```
+
+### Image Pull Failures
+
+**Symptom:** App stuck in "Waiting" or "ImagePullBackOff"
+
+**Diagnose:**
+```bash
+# Check if registry is configured
+az containerapp show --name APP -g RG --query "properties.configuration.registries"
+```
+
+**Fix:**
+```bash
+az containerapp registry set --name APP -g RG --server ACR.azurecr.io --identity system
+```
+
+### Cold Start Timeouts
+
+**Symptom:** First request times out
+
+**Fix:**
+```bash
+az containerapp update --name APP -g RG --min-replicas 1
+```
+
+### Port Mismatch
+
+**Symptom:** App starts but requests fail
+
+**Check:**
+```bash
+az containerapp show --name APP -g RG --query "properties.configuration.ingress.targetPort"
+```
+
+**Fix:** Ensure app listens on the configured port (check Dockerfile EXPOSE)
+
+### View Logs
+
+```bash
+# Stream logs
+az containerapp logs show --name APP -g RG --follow
+
+# Recent logs
+az containerapp logs show --name APP -g RG --tail 100
+```
+
+## Health Checks
+
+Configure health probes:
+
+```bash
+az containerapp update \
+  --name myapp -g RG \
+  --health-probe-path /health \
+  --health-probe-interval 30 \
+  --health-probe-timeout 5
+```
+
+Your app should expose a health endpoint:
+```javascript
+app.get('/health', (req, res) => res.sendStatus(200));
 ```
 
 ## Dapr Integration
@@ -104,22 +235,11 @@ az containerapp update \
   --dapr-app-port 8080
 ```
 
-## Revision Management
-
-```bash
-# List revisions
-az containerapp revision list --name myapp -g RG --output table
-
-# Split traffic
-az containerapp ingress traffic set \
-  --name myapp -g RG \
-  --revision-weight myapp--rev1=80 myapp--rev2=20
-```
-
 ## Best Practices
 
-1. Use managed certificates for HTTPS
-2. Configure VNet integration for private apps
-3. Enable Dapr for service mesh features
-4. Use revision-based deployments for rollback
-5. Store secrets in Key Vault with managed identity
+1. **Use azd** for all deployments
+2. **Run preflight checks** before deploying
+3. **Set min-replicas=1** to avoid cold starts in production
+4. **Configure health probes** for reliability
+5. **Use managed identity** for ACR access
+6. **Store secrets in Key Vault** with managed identity

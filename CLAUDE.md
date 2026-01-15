@@ -140,6 +140,17 @@ azure-mcp/
 
 ## Changelog
 
+### 1.1.0
+- **NEW: /azure:preflight command** for pre-deployment checks (tools, auth, quotas)
+- **NEW: Node.js/Express production scenario** with trust proxy, cookie config, health checks
+- **IMPROVED: azd strongly preferred** over az for all deployments (parallel provisioning is faster)
+- **IMPROVED: ACR integration guidance** - automatic credential config, image pull troubleshooting
+- **IMPROVED: ACR Tasks fallback** - detect disabled ACR Tasks (free subs), offer local Docker build
+- **IMPROVED: CLI auto-installation** - detect missing tools, offer one-click winget/brew install
+- **IMPROVED: Container Apps troubleshooting** - cold starts, port mismatch, health probe failures
+- **IMPROVED: Hooks** detect ACR Tasks errors, CLI not found, image pull failures
+- **ADDED: azd down --force --purge** guidance for test environment cleanup
+
 ### 1.0.0
 - **MAJOR: Progressive Skill Architecture**
 - Consolidated 7 individual skills into single `azure-cloud` skill

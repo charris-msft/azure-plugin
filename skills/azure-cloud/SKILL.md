@@ -30,6 +30,7 @@ I help you work with Azure services efficiently. Instead of loading everything u
 | Deploy an application | `scenarios/deployment.md` |
 | Debug production issues | `scenarios/diagnostics.md` |
 | Install Azure CLI tools (az, azd, func) | `scenarios/cli-tools.md` |
+| Configure Node.js/Express for Azure | `scenarios/nodejs-production.md` |
 | Reduce Azure costs | `scenarios/cost-optimization.md` |
 | Secure your resources | `scenarios/security-hardening.md` |
 

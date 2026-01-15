@@ -1,50 +1,64 @@
 # Azure Compute Services
 
-## Services
+## ALWAYS Use azd for Deployments
 
-| Service | Use When | MCP Tools | CLI |
-|---------|----------|-----------|-----|
-| Container Apps | Microservices, serverless containers | `azure_container_app_*` | `az containerapp` |
-| App Service | Web apps, REST APIs, managed platform | `azure_appservice_*` | `az webapp` |
-| Azure Functions | Event-driven, pay-per-execution | `azure_function_*` | `func`, `az functionapp` |
-| AKS | Full Kubernetes control, complex architectures | `azure_aks_*` | `az aks` |
-| VMs | Legacy apps, custom requirements | - | `az vm` |
-
-## Deployment: azd vs az
-
-**For deploying applications, prefer Azure Developer CLI (azd).**
-
-| Tool | Best For |
-|------|----------|
-| **azd** | Deploying apps with infrastructure (recommended) |
-| **az** | Managing existing resources, queries |
-
-### azd Quick Start
+**azd (Azure Developer CLI) is faster than az** because it provisions resources in parallel.
 
 ```bash
-# Initialize from template
-azd init --template azure-samples/todo-nodejs-mongo-aca
-
-# Provision AND deploy
+# Deploy everything
 azd up
 
-# Deploy code only (after initial setup)
-azd deploy
-
-# Tear down everything
-azd down
+# Clean up test environments
+azd down --force --purge
 ```
 
-## MCP Server (Preferred)
+**Why azd:**
+- Parallel provisioning (faster)
+- Automatic ACR + Container Apps integration
+- Single command cleanup
+- Built-in CI/CD generation
 
-When Azure MCP is enabled:
+## Services
+
+| Service | Use When | azd Template |
+|---------|----------|--------------|
+| Container Apps | Microservices, APIs, containers | `todo-nodejs-mongo-aca` |
+| Azure Functions | Event-driven, serverless | `todo-python-mongo-swa-func` |
+| App Service | Traditional web apps | `todo-csharp-sql` |
+| AKS | Full Kubernetes control | (use azd with custom Bicep) |
+
+## Quick Deploy
+
+```bash
+# 1. Initialize from template
+azd init --template azure-samples/todo-nodejs-mongo-aca
+
+# 2. Deploy (provisions + deploys in parallel)
+azd up
+
+# 3. Iterate on code changes
+azd deploy
+
+# 4. Clean up test environment
+azd down --force --purge
+```
+
+## Pre-flight Check
+
+**Run `/azure:preflight` before deploying** to verify:
+- Tools installed (az, azd, docker)
+- Authentication valid
+- Quotas sufficient
+- Docker running
+
+## MCP Server (For Queries Only)
+
+Use MCP tools to **query** existing resources, not deploy:
 
 - `azure_container_app_list` - List container apps
 - `azure_appservice_webapp_list` - List web apps
-- `azure_appservice_webapp_get` - Get app details
 - `azure_function_app_list` - List function apps
 - `azure_aks_cluster_list` - List AKS clusters
-- `azure_aks_nodepool_list` - List node pools
 
 **If Azure MCP is not enabled:** Run `/azure:setup` or enable via `/mcp`.
 
@@ -52,32 +66,18 @@ When Azure MCP is enabled:
 
 | If your app is... | Use | Why |
 |-------------------|-----|-----|
-| HTTP APIs, microservices | Container Apps | Serverless, auto-scale, Dapr |
-| Traditional web apps | App Service | Managed platform, easy deployment |
-| Event-driven functions | Azure Functions | Pay-per-execution, triggers |
-| Complex K8s workloads | AKS | Full Kubernetes control |
-
-## CLI Fallback
-
-```bash
-# Container Apps
-az containerapp list --output table
-
-# App Service
-az webapp list --output table
-
-# Functions
-az functionapp list --output table
-
-# AKS
-az aks list --output table
-```
+| HTTP APIs, microservices | **Container Apps** | Serverless, auto-scale, Dapr |
+| Event-driven | **Functions** | Pay-per-execution |
+| Traditional web apps | **App Service** | Managed platform |
+| Complex K8s workloads | **AKS** | Full control |
 
 ## Service Details
 
-For deep documentation on specific services:
+- Container Apps (recommended) -> `services/container-apps.md`
+- Azure Functions -> `services/functions.md`
+- App Service -> `services/app-service.md`
+- AKS -> `services/aks.md`
 
-- Container Apps deployment and scaling -> `services/container-apps.md`
-- App Service plans and slots -> `services/app-service.md`
-- Functions triggers and hosting plans -> `services/functions.md`
-- AKS cluster configuration -> `services/aks.md`
+## Production Configs
+
+- Node.js/Express apps -> `scenarios/nodejs-production.md`

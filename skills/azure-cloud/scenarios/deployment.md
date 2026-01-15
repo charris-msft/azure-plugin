@@ -1,104 +1,187 @@
 # Deploying Applications to Azure
 
-## Choose Your Compute
+## ALWAYS Use azd (Azure Developer CLI)
 
-| If your app is... | Use | Domain File |
-|-------------------|-----|-------------|
-| HTTP APIs, microservices | Container Apps | `domains/compute/services/container-apps.md` |
-| Event-driven functions | Azure Functions | `domains/compute/services/functions.md` |
-| Traditional web apps | App Service | `domains/compute/services/app-service.md` |
-| Full Kubernetes control | AKS | `domains/compute/services/aks.md` |
-
-## Recommended: Azure Developer CLI (azd)
-
-For new application deployments, use azd:
+**azd is faster than az for deployments** because it provisions resources in parallel and handles all the integration automatically.
 
 ```bash
-# Initialize from template
+# Full deployment (infrastructure + code)
+azd up
+
+# Clean up test environments
+azd down --force --purge   # --purge only for test, never production
+```
+
+**Why azd over az:**
+- Parallel resource provisioning (faster)
+- Automatic ACR + Container Apps integration
+- Built-in environment management (dev/test/prod)
+- Single command cleanup with `azd down`
+- Generates CI/CD pipelines
+
+## Pre-flight Checks (CRITICAL)
+
+**Run `/azure:preflight` BEFORE any deployment** to avoid mid-deployment failures.
+
+Check these items:
+1. Tools installed (az, azd, docker)
+2. Authentication valid
+3. Subscription quotas sufficient
+4. Docker daemon running (for containers)
+
+## Choose Your Compute
+
+| If your app is... | Use | Template |
+|-------------------|-----|----------|
+| HTTP APIs, microservices | Container Apps | `todo-nodejs-mongo-aca` |
+| Event-driven functions | Azure Functions | `todo-python-mongo-swa-func` |
+| Traditional web apps | App Service | `todo-csharp-sql` |
+
+## Quick Deploy with azd
+
+### Step 1: Initialize
+
+```bash
+# From template (recommended)
 azd init --template azure-samples/todo-nodejs-mongo-aca
 
+# Or existing project
+azd init
+```
+
+### Step 2: Deploy
+
+```bash
 # Provision infrastructure AND deploy code
 azd up
 
-# Deploy code only (after initial setup)
-azd deploy
-
-# Tear down everything
-azd down
+# This does everything:
+# - Creates resource group
+# - Creates ACR and builds image
+# - Creates Container Apps environment
+# - Configures ACR credentials automatically
+# - Deploys your app
 ```
 
-### Popular Templates
+### Step 3: Iterate
 
-| Template | Stack | Target |
-|----------|-------|--------|
-| `todo-nodejs-mongo-aca` | Node.js + MongoDB | Container Apps |
-| `todo-python-mongo-aca` | Python + MongoDB | Container Apps |
-| `todo-csharp-sql-aca` | .NET + SQL | Container Apps |
-| `todo-python-mongo-swa-func` | Python + Functions | Static Web Apps |
+```bash
+# Code changes only (faster)
+azd deploy
+
+# View what's deployed
+azd show
+```
+
+### Step 4: Clean Up (Test Environments)
+
+```bash
+# Remove everything including soft-deleted resources
+azd down --force --purge
+```
+
+## ACR + Container Apps Integration
+
+**azd handles this automatically.** If deploying manually, you MUST configure ACR credentials:
+
+### The Problem
+
+When Container Apps and ACR are in the same deployment, Container Apps needs permission to pull images. azd does this automatically, but manual deployments often miss this step.
+
+### Manual Fix (if not using azd)
+
+```bash
+# After creating both ACR and Container App:
+az containerapp registry set \
+  --name APP_NAME \
+  --resource-group RG \
+  --server ACR_NAME.azurecr.io \
+  --identity system
+```
+
+Or with admin credentials (less secure):
+```bash
+# Enable admin on ACR
+az acr update --name ACR_NAME --admin-enabled true
+
+# Get credentials
+ACR_PASSWORD=$(az acr credential show --name ACR_NAME --query "passwords[0].value" -o tsv)
+
+# Set on Container App
+az containerapp registry set \
+  --name APP_NAME \
+  --resource-group RG \
+  --server ACR_NAME.azurecr.io \
+  --username ACR_NAME \
+  --password $ACR_PASSWORD
+```
+
+**Recommendation:** Just use `azd up` - it handles all of this automatically.
+
+## Popular azd Templates
+
+| Template | Stack | Services |
+|----------|-------|----------|
+| `todo-nodejs-mongo-aca` | Node.js + MongoDB | Container Apps + Cosmos DB |
+| `todo-python-mongo-aca` | Python + MongoDB | Container Apps + Cosmos DB |
+| `todo-csharp-sql-aca` | .NET + SQL | Container Apps + SQL Database |
+| `todo-python-mongo-swa-func` | Python + Functions | Static Web Apps + Functions |
 
 Browse more: https://azure.github.io/awesome-azd/
 
-## Standard Deployment Flow
-
-1. **Build** - Create container image or package
-2. **Push** - Upload to Azure Container Registry
-3. **Deploy** - Create/update compute resource
-4. **Configure** - Set environment, secrets, scaling
-5. **Verify** - Check health, logs, metrics
-
-## Quick Deploy: Container Apps
+## Environment Management
 
 ```bash
-# Build and push to ACR
-az acr build --registry REGISTRY --image myapp:v1 .
+# Create environments for different stages
+azd env new dev
+azd env new prod
 
-# Deploy
-az containerapp up \
-  --name myapp \
-  --resource-group RG \
-  --image REGISTRY.azurecr.io/myapp:v1 \
-  --ingress external \
-  --target-port 8080
+# Switch environments
+azd env select prod
+
+# Set environment-specific values
+azd env set AZURE_LOCATION westus2
+azd env set AZURE_SUBSCRIPTION_ID xxx-xxx-xxx
 ```
 
-## Quick Deploy: App Service
+## Deployment Troubleshooting
 
+### Image Pull Failures
+
+**Symptom:** Container App stuck in "Waiting" or "ImagePullBackOff"
+
+**Fix:**
 ```bash
-# ZIP deploy
-az webapp deploy \
-  --name myapp -g RG \
-  --src-path app.zip \
-  --type zip
+# Check if ACR credentials are configured
+az containerapp show --name APP -g RG --query "properties.configuration.registries"
+
+# If empty, set credentials:
+az containerapp registry set --name APP -g RG --server ACR.azurecr.io --identity system
 ```
 
-## Quick Deploy: Functions
+### Quota Exceeded
 
+**Symptom:** Deployment fails with quota error
+
+**Fix:**
+1. Check quotas: `az quota usage list --scope /subscriptions/SUB_ID/...`
+2. Try different region
+3. Request quota increase via Azure portal
+
+### Cold Start Issues
+
+**Symptom:** First request very slow or times out
+
+**Fix:**
 ```bash
-func azure functionapp publish FUNCTIONAPP
+# Set minimum replicas
+az containerapp update --name APP -g RG --min-replicas 1
 ```
 
 ## Post-Deployment Checklist
 
-- [ ] Verify application health endpoint
-- [ ] Check logs for errors -> `domains/observability/README.md`
-- [ ] Set up alerts -> `domains/observability/services/alerts.md`
+- [ ] Verify app is healthy: check `/health` endpoint
+- [ ] Check logs for errors: `az containerapp logs show --name APP -g RG`
+- [ ] Set up alerts: -> `domains/observability/README.md`
 - [ ] Configure custom domain if needed
-- [ ] Review security settings -> `scenarios/security-hardening.md`
-- [ ] Set up CI/CD pipeline
-
-## Troubleshooting Deployments
-
-**Application not starting:**
-1. Check container logs: `az containerapp logs show`
-2. Verify environment variables
-3. Check for startup errors in App Insights
-
-**Health check failing:**
-1. Verify health endpoint returns 200
-2. Check if port is correct
-3. Review application startup time
-
-**Permission errors:**
-1. Check managed identity is enabled
-2. Verify RBAC role assignments
-3. Review Key Vault access policies
+- [ ] Review security: -> `scenarios/security-hardening.md`
