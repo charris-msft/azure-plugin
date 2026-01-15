@@ -140,6 +140,15 @@ azure-mcp/
 
 ## Changelog
 
+### 1.3.0
+- **NEW: Pre-deployment validation scenario** (`scenarios/validation.md`)
+- **Azure naming constraints** - Documents 24-char limits for Storage/KeyVault, character restrictions
+- **PostToolUse hook catches naming errors** - Detects "must be between 3 and 24 characters", "already in use", etc.
+- **PreToolUse hook warns on large output** - Blocks `az account list` without `--query` to prevent 140K char overflow
+- **Bicep validation guidance** - Use `azure__bicepschema_get` and `azure__deploy_iac_rules_get` before writing IaC
+- **Deployment plan generation** - Use `azure__deploy_plan_get` for comprehensive deployment planning
+- **Resource filtering best practices** - Always use `--query` and `-o table` for az commands
+
 ### 1.2.0
 - **CRITICAL: PreToolUse hook enforces azd over az for deployments**
 - Hook blocks `az containerapp create`, `az webapp up`, `az functionapp create` etc.

@@ -27,6 +27,7 @@ I help you work with Azure services efficiently. Instead of loading everything u
 
 | Scenario | File |
 |----------|------|
+| **Validate before deploying** | `scenarios/validation.md` |
 | Deploy an application | `scenarios/deployment.md` |
 | Debug production issues | `scenarios/diagnostics.md` |
 | Install Azure CLI tools (az, azd, func) | `scenarios/cli-tools.md` |
